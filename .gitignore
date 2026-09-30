@@ -5,6 +5,9 @@ node_modules/
 dist/
 build/
 
+# Generated extension zip (npm run build:extension)
+vigil-extension.zip
+
 # Environment files
 .env
 .env.local

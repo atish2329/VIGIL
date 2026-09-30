@@ -16,7 +16,8 @@
     "smoke": "python3 scripts/run_smoke_test.py",
     "guard": "python3 agent/vigil_agent_guard.py demo",
     "test": "python3 scripts/run_offline_fixtures.py && python3 scripts/run_vision_tests.py",
-    "test:extension": "python3 extension/test_extension.py"
+    "test:extension": "python3 extension/test_extension.py",
+    "build:extension": "sh ./scripts/build_extension_zip.sh"
   },
   "dependencies": {
     "react": "^18.2.0",
