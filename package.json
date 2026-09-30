@@ -1,19 +1,31 @@
 {
-  "name": "vigil-stitch-design",
+  "name": "vigil-frontend",
   "private": true,
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "design:stitch": "node scripts/generate-vigil-design.mjs",
-    "server": "python3 app.py",
-    "start": "python3 app.py",
-    "fixtures": "python3 scripts/run_offline_fixtures.py",
-    "test:llm": "python3 scripts/test_llm_providers.py",
-    "demo:llm": "python3 scripts/demo_local_llm.py",
-    "smoke": "python3 scripts/run_smoke_test.py",
-    "guard": "python3 agent/vigil_agent_guard.py demo",
-    "test": "python3 scripts/run_offline_fixtures.py && python3 scripts/run_vision_tests.py"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.20.0",
+    "framer-motion": "^10.16.4"
   },
   "devDependencies": {
-    "@google/stitch-sdk": "^0.3.5"
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
+    "@vitejs/plugin-react": "^4.2.0",
+    "autoprefixer": "^10.4.16",
+    "eslint": "^8.53.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.4",
+    "postcss": "^8.4.31",
+    "tailwindcss": "^3.3.5",
+    "typescript": "^5.2.2",
+    "vite": "^5.0.0"
   }
 }
