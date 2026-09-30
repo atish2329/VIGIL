@@ -7,7 +7,7 @@ Step-by-step instructions to build, run, and verify every component of VIGIL loc
 | Component | Location | What it is |
 |---|---|---|
 | Analyzer server | `app.py` | Local Python HTTP server — the rules engine + optional Ollama review |
-| Chromium extension | `extension/` | Browser extension to review the current page |
+| Chromium extension | `extension/` | Manifest V3 side-panel extension (page / selection / screenshot scanning) |
 | Web UI | `web/` | Browser frontend (deployed on Vercel) |
 | Serverless API | `api/` | Vercel Python functions backing the web UI (`/api/*`) |
 | Offline verification | `scripts/run_offline_fixtures.py` | Deterministic fixture tests, no network or model required |
@@ -66,12 +66,36 @@ VIGIL_PORT=9000 python3 app.py
 
 ## 2. Load the Chromium Extension
 
-1. Start the local server first (step 1) — the extension talks to `http://127.0.0.1:8000`.
+The companion extension (**VIGIL Security**, Manifest V3) adds a full side panel to the browser: current-page scanning, selected-text scanning, screenshot analysis via VIGIL Vision (local OCR — the image never leaves the device), scan history, and settings. It is a pure client: every verdict comes from the analyzer, no detection logic is duplicated, and no secrets are stored in the extension.
+
+### 2.1 Install and load
+
+1. Start the analyzer first (step 1) — the extension talks to `http://127.0.0.1:8000`.
 2. Open `chrome://extensions` in your Chromium browser.
 3. Enable **Developer mode** (toggle, top-right).
-4. Click **Load unpacked**.
-5. Select the `extension/` directory of this repo.
-6. Pin "VIGIL Page Review" to the toolbar. Navigate to any page and click the icon to get an `ALLOW` / `WARN` / `DENY` review.
+4. Click **Load unpacked** and select the `extension/` directory of this repo.
+5. Pin **VIGIL Security** to the toolbar and click the icon — the VIGIL side panel opens next to the page.
+
+### 2.2 Configure the API URL
+
+The server address defaults to `http://127.0.0.1:8000` (defined in `extension/config/config.js`). To point the extension somewhere else — e.g. a deployed VIGIL instance — open the side panel → **⚙ Settings** → **VIGIL server address**, enter the URL, **Save**, then **Test Connection**. The setting syncs via `chrome.storage.sync`; no restart is needed. The backend URL is the only configuration the extension carries: there are no API keys client-side by design. Any LLM credentials stay on the backend (`VIGIL_LLM_*` / `VIGIL_OLLAMA_*`, see § 5).
+
+### 2.3 Using the extension
+
+- **Scan This Page** — extracts page structure (text, visible links, form shapes) and returns the verdict with evidence. Never reads form values.
+- **Right-click selected text → "Scan with VIGIL"** — analyzes the highlighted message through the same engine as the Message tab.
+- **Capture & Scan** — captures the visible tab and runs the VIGIL Vision pipeline locally (Tesseract.js OCR + jsQR, bundled in `extension/vendor/`), then sends only extracted text/coordinates to the analyzer. First Vision scan warms the local OCR engine (a few seconds).
+- **Settings** — enable/disable page scanning, clear or disable history (metadata only: time, label, verdict, score), backend + local-model status.
+
+> Permissions: `storage`, `activeTab`, `scripting`, `contextMenus`, `sidePanel` — the minimum set. Nothing is sent to the backend until you trigger a scan, and page content is never stored. If you change the analyzer port, also update `host_permissions` in `extension/manifest.json`.
+
+### 2.4 Verifying the extension build
+
+```bash
+npm run test:extension
+```
+
+This validates the manifest, referenced files, permission surface, CSP, and icons; runs static privacy checks (no form-value reads, no keystroke listeners, no secrets, no dynamic HTML injection); starts the real analyzer and exercises every endpoint the extension calls with the exact payload shapes; and, if a system `tesseract` binary is available, runs the full Vision path end-to-end — renders fixture screenshots, OCRs them, sends the region payload to `/api/vision/analyze`, and checks the verdicts.
 
 ---
 
@@ -226,7 +250,8 @@ python3 scripts/run_offline_fixtures.py     # 2. verify (terminal 2)
 
 | Symptom | Fix |
 |---|---|
-| Extension says it can't reach VIGIL | Is `python3 app.py` running? Extension requires port `8000` (see manifest note above). |
+| Extension says it can't reach VIGIL | Is `python3 app.py` running? Check the server address under ⚙ Settings in the side panel; if you changed the port, update `host_permissions` in `extension/manifest.json`. |
+| Extension OCR fails to start | Reload the extension on `chrome://extensions`. The WASM OCR engine is bundled in `extension/vendor/`; no network or system packages are needed. |
 | `Address already in use` | Another process holds the port — use `VIGIL_PORT=<other> python3 app.py`. |
 | Model review shows `offline` | Expected without a local LLM — rules-only fallback is automatic. Connect one via `VIGIL_LLM_BASE_URL`/`VIGIL_LLM_MODEL` (OpenAI-compatible) or `VIGIL_OLLAMA_URL`/`VIGIL_OLLAMA_MODEL` (Ollama) — see § 5. |
 | Web UI 404s on `/api/*` locally | Serve via `vercel dev`, not a static file server — the functions live in `api/`. |
