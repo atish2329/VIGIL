@@ -97,6 +97,14 @@ npm run test:extension
 
 This validates the manifest, referenced files, permission surface, CSP, and icons; runs static privacy checks (no form-value reads, no keystroke listeners, no secrets, no dynamic HTML injection); starts the real analyzer and exercises every endpoint the extension calls with the exact payload shapes; and, if a system `tesseract` binary is available, runs the full Vision path end-to-end — renders fixture screenshots, OCRs them, sends the region payload to `/api/vision/analyze`, and checks the verdicts.
 
+To rebuild the distributable `vigil-extension.zip` (extension contents at the archive root so the extracted folder can be loaded directly via **Load unpacked**; excludes `test_extension.py` and bytecode caches):
+
+```bash
+npm run build:extension
+```
+
+The build script fails if `manifest.json` is not at the zip root — nesting the contents under `extension/` makes Chrome reject the load with "Manifest file is missing or unreadable."
+
 ---
 
 ## 3. Run the Web UI
