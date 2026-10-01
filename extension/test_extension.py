@@ -146,8 +146,18 @@ def static_checks():
     check("context menu 'Scan with VIGIL' registered", '"Scan with VIGIL"' in worker and "vigil-scan-selection" in worker)
     panel_js_src = open(os.path.join(HERE, "sidepanel/sidepanel.js")).read()
     check(
-        "panel distinguishes bridge-down from no active tab",
-        "workerReachable" in panel_js_src and "background worker" in panel_js_src,
+        "URL scanner wired to input + button (no fabricated scoring)",
+        'urlForm: $("url-form")' in panel_js_src
+        and "API.analyzeContent(normalized)" in panel_js_src
+        and 'url-input' in open(os.path.join(HERE, "sidepanel/sidepanel.html")).read(),
+    )
+    check(
+        "normalized result structure funnels all scanners",
+        "function normalizeResult" in panel_js_src and "lastPageResult = normalized" in panel_js_src,
+    )
+    check(
+        "page-risk dot reflects last page scan only (no auto-scan)",
+        "pageRiskTone" in panel_js_src and "risk-dot" in open(os.path.join(HERE, "sidepanel/sidepanel.html")).read(),
     )
     check(
         "panel live-follows tab switches (onActivated/onUpdated)",
@@ -163,7 +173,7 @@ def static_checks():
     )
     check(
         "empty selection shows actionable message",
-        "No text selected. Select suspicious text on the page and try again." in panel_js_src,
+        "No text selected. Highlight suspicious text and try again." in panel_js_src,
     )
     check(
         "history clear confirms before wiping",
@@ -315,6 +325,23 @@ def api_checks(port):
     safe = "Hi Mira, the project review is at 3 PM in Room 204. Please bring the latest slides."
     safe_result = post(port, "/api/analyze", {"content": safe})
     check("POST /api/analyze benign → ALLOW", safe_result.get("decision") == "ALLOW", safe_result.get("decision"))
+
+    # URL scanner contract: the panel's Scan URL sends the bare URL as content;
+    # the backend's URL-heuristics layer must flag structural deception.
+    url_result = post(port, "/api/analyze", {"content": "http://198.51.100.7/paypal-login"})
+    url_ids = {item.get("id") for item in url_result.get("evidence", [])}
+    check(
+        "URL heuristics: IP-host URL flagged via /api/analyze",
+        "url_ip_host" in url_ids,
+        f"decision={url_result.get('decision')}, ids={sorted(url_ids)}",
+    )
+    puny_result = post(port, "/api/analyze", {"content": "https://xn--pple-43d.com/signin"})
+    puny_ids = {item.get("id") for item in puny_result.get("evidence", [])}
+    check(
+        "URL heuristics: punycode host flagged via /api/analyze",
+        "url_punycode" in puny_ids,
+        f"decision={puny_result.get('decision')}, ids={sorted(puny_ids)}",
+    )
 
     page = post(
         port,

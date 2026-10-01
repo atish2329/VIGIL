@@ -26,7 +26,7 @@
     <section class="view" id="view-home" aria-label="Scan controls">
       <div class="card page-card">
         <p class="eyebrow">CURRENT PAGE</p>
-        <h2 class="page-title" id="page-title">Ready to scan</h2>
+        <h2 class="page-title" id="page-title"><span id="risk-dot" class="risk-dot dot-gray" aria-hidden="true"></span><span id="page-title-text">Ready to scan</span></h2>
         <p class="page-url" id="page-url">Open a webpage, then scan it before trusting its content.</p>
         <button id="btn-scan-page" class="btn-primary" type="button">Scan This Page</button>
       </div>
@@ -36,6 +36,11 @@
           Scan Selected Text
         </button>
         <button id="btn-capture" class="btn-secondary" type="button">Capture &amp; Scan</button>
+        <form id="url-form" class="url-row" autocomplete="off">
+          <input id="url-input" class="url-input" type="url" spellcheck="false"
+                 placeholder="https://example.com" aria-label="URL to scan" />
+          <button id="btn-scan-url" class="btn-secondary" type="submit">Scan URL</button>
+        </form>
         <p class="hint">Select text on the page and right-click → “Scan with VIGIL”, or use the buttons above.</p>
       </div>
 

@@ -29,10 +29,15 @@
     connDot: $("conn-dot"),
     connText: $("conn-text"),
     pageTitle: $("page-title"),
+    pageTitleText: $("page-title-text"),
+    riskDot: $("risk-dot"),
     pageUrl: $("page-url"),
     btnScanPage: $("btn-scan-page"),
     btnScanSelection: $("btn-scan-selection"),
     btnCapture: $("btn-capture"),
+    urlInput: $("url-input"),
+    urlForm: $("url-form"),
+    btnScanUrl: $("btn-scan-url"),
     steps: Array.from(document.querySelectorAll("#steps li")),
     visionPreview: $("vision-preview"),
     btnCancel: $("btn-cancel"),
@@ -70,6 +75,7 @@
 
   let activeTab = null;
   let lastRun = null; // for Try Again
+  let lastPageResult = null; // normalized result of the last page scan
   let scanCount = 0;
   let generation = 0; // invalidates stale async completions
   let clearArmTimer = null; // two-step history clear
@@ -183,6 +189,62 @@
   // ------------------------------------------------------------------
   // Result rendering (backend data only — nothing fabricated)
   // ------------------------------------------------------------------
+  function toneClass(tone) {
+    if (tone === "high") return "dot-red";
+    if (tone === "warn") return "dot-yellow";
+    if (tone === "safe") return "dot-green";
+    return "dot-gray";
+  }
+
+  function isFiniteScore(value) {
+    return typeof value === "number" && Number.isFinite(value);
+  }
+
+  /**
+   * Normalized result model (spec §15): every scanner funnels through here so
+   * the UI renders one shape regardless of which scan produced it. Fields map
+   * from real backend responses via FORMAT.toViewModel; nothing is fabricated.
+   *   {riskLevel, riskScore, confidence, threatType, summary, indicators,
+   *    evidence, recommendation, timestamp, domain, tone, kind}
+   */
+  function normalizeResult(model, meta) {
+    const url = (meta && meta.url) || (activeTab && activeTab.url) || "";
+    let domain = "";
+    try {
+      domain = url ? new URL(url).hostname : "";
+    } catch {
+      domain = "";
+    }
+    return {
+      riskLevel: model.headlineWord || "UNKNOWN",
+      riskScore: isFiniteScore(model.score) ? model.score : null,
+      confidence: isFiniteScore(model.confidence) ? model.confidence : null,
+      threatType: model.decision || "",
+      summary: model.explanation || "",
+      indicators: (model.evidence || []).map((item) => item.title),
+      evidence: model.evidence || [],
+      recommendation: (model.recommendedActions || [])[0] || "",
+      timestamp: new Date().toISOString(),
+      domain,
+      tone: model.tone,
+      kind: model.kind || (meta && meta.kind) || "text",
+    };
+  }
+
+  /** Page-risk badge state for the CURRENT PAGE title dot: last scan only —
+   * VIGIL never auto-scans pages as you browse. */
+  function pageRiskTone(url) {
+    if (!lastPageResult) return "gray";
+    try {
+      if (url && lastPageResult.domain && new URL(url).hostname === lastPageResult.domain) {
+        return lastPageResult.tone;
+      }
+    } catch {
+      /* fall through */
+    }
+    return "gray";
+  }
+
   function showResult(model, meta) {
     els.resultLabel.textContent = meta.label || "SECURITY ANALYSIS";
     els.verdictBadge.textContent = model.headline;
@@ -241,6 +303,8 @@
 
     renderModelNote(model.localModel);
     lastRun = { model, meta };
+    const normalized = normalizeResult(model, meta);
+    if (meta.kind === "page") lastPageResult = normalized;
     showView("result");
   }
 
@@ -360,7 +424,8 @@
     activeTab = tab;
     if (tab && tab.url) {
       const scannable = isScannableUrl(tab.url);
-      els.pageTitle.textContent = tab.title || hostLabel(tab.url) || "Current page";
+      els.pageTitleText.textContent = tab.title || hostLabel(tab.url) || "Current page";
+      els.riskDot.className = "risk-dot " + toneClass(pageRiskTone(tab.url));
       els.pageUrl.textContent = scannable
         ? tab.url
         : "VIGIL cannot scan this Chrome page. Open a normal webpage and try again.";
@@ -373,14 +438,16 @@
       // The panel's message bridge to the background worker is dead (typical
       // after the extension was reloaded while this panel stayed open).
       // Reopening the panel re-binds it to the current extension instance.
-      els.pageTitle.textContent = "VIGIL can't reach its background worker";
+      els.pageTitleText.textContent = "VIGIL can't reach its background worker";
+      els.riskDot.className = "risk-dot dot-gray";
       els.pageUrl.textContent = "Close and reopen this panel; if that doesn't help, reload the extension in chrome://extensions (↻).";
       els.btnScanPage.disabled = true;
       els.btnCapture.disabled = true;
       refreshSelectionButton();
       return;
     }
-    els.pageTitle.textContent = "No active page";
+    els.pageTitleText.textContent = "No active page";
+    els.riskDot.className = "risk-dot dot-gray";
     els.pageUrl.textContent = "Open a webpage to scan it with VIGIL.";
     els.btnScanPage.disabled = true;
     els.btnCapture.disabled = true;
@@ -507,7 +574,7 @@
       }
       text = (text || "").trim();
       if (!text) {
-        throw new Error("No text selected. Select suspicious text on the page and try again.");
+        throw new Error("No text selected. Highlight suspicious text and try again.");
       }
       if (thisGeneration !== generation) return;
       setStep("capture", "done", "selection");
@@ -536,6 +603,46 @@
   // ------------------------------------------------------------------
   // Scan 3: capture & scan (VIGIL Vision)
   // ------------------------------------------------------------------
+  async function scanUrl() {
+    const raw = els.urlInput.value.trim();
+    if (!raw) {
+      els.urlInput.focus();
+      return;
+    }
+    let normalized = raw;
+    if (!/^https?:\/\//i.test(raw)) {
+      normalized = "https://" + raw;
+    }
+    let parsed;
+    try {
+      parsed = new URL(normalized);
+    } catch {
+      showError("That doesn't look like a valid URL. Check it and try again.");
+      return;
+    }
+    if (!/^https?:$/.test(parsed.protocol)) {
+      showError("Only http and https URLs can be scanned.");
+      return;
+    }
+    return runScan(async (thisGeneration) => {
+      setStep("capture", "done", parsed.hostname);
+      setStep("extract", "running");
+      // The backend's text engine includes the URL heuristics layer (punycode,
+      // IP hosts, userinfo, HTTP transport, link/brand mismatch) — the URL is
+      // analyzed as text; VIGIL never visits it.
+      const result = await API.analyzeContent(normalized);
+      if (thisGeneration !== generation) return;
+      setStep("extract", "done", "URL heuristics");
+      setStep("urls", "done", parsed.hostname);
+      setStep("correlate", "done");
+      setStep("score", "done");
+      setStep("report", "done");
+      const model = FORMAT.toViewModel(result, { kind: "url", label: "URL ANALYSIS" });
+      showResult(model, { kind: "url", label: "URL ANALYSIS", url: normalized });
+      await addHistory(model, hostLabel(normalized), "url");
+    });
+  }
+
   async function scanVision() {
     return runScan(async (thisGeneration) => {
       setStep("capture", "running");
@@ -639,6 +746,10 @@
   function wire() {
     els.btnScanPage.addEventListener("click", () => runScan(scanPage));
     els.btnCapture.addEventListener("click", () => runScan(scanVision));
+    els.urlForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      scanUrl();
+    });
     els.btnScanSelection.addEventListener("click", () => scanSelection());
     els.btnCancel.addEventListener("click", cancelScan);
     els.btnBack.addEventListener("click", () => showView("home"));
