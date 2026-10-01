@@ -324,10 +324,49 @@
     return Boolean(url) && !/^(chrome|edge|about|chrome-extension|devtools|view-source|file):/i.test(url);
   }
 
+  // True when the extension's background worker answered the last
+  // vigil:getActiveTab message. A null response means the bridge is down
+  // (stale panel outliving an extension reload, worker crash) — distinct
+  // from "no active tab".
+  let workerLastResponse = false;
+
+  function workerReachable() {
+    return Boolean(workerLastResponse);
+  }
+
   async function getActiveTab() {
     const response = await sendMessage({ type: "vigil:getActiveTab" });
+    workerLastResponse = Boolean(response);
     if (!response || !response.ok || !response.tab) return null;
     return response.tab;
+  }
+
+  async function updateActiveTabDisplay() {
+    const tab = await getActiveTab();
+    activeTab = tab;
+    if (tab && tab.url) {
+      els.pageTitle.textContent = tab.title || hostLabel(tab.url) || "Current page";
+      els.pageUrl.textContent = tab.url;
+      els.btnScanPage.disabled = !isScannableUrl(tab.url);
+      els.btnCapture.disabled = !isScannableUrl(tab.url);
+      return;
+    }
+    if (!workerReachable()) {
+      // The panel's message bridge to the background worker is dead (typical
+      // after the extension was reloaded while this panel stayed open).
+      // Reopening the panel re-binds it to the current extension instance.
+      els.pageTitle.textContent = "VIGIL can't reach its background worker";
+      els.pageUrl.textContent = "Close and reopen this panel; if that doesn't help, reload the extension in chrome://extensions (↻).";
+      els.btnScanPage.disabled = true;
+      els.btnCapture.disabled = true;
+      refreshSelectionButton();
+      return;
+    }
+    els.pageTitle.textContent = "No active page";
+    els.pageUrl.textContent = "Open a webpage to scan it with VIGIL.";
+    els.btnScanPage.disabled = true;
+    els.btnCapture.disabled = true;
+    refreshSelectionButton();
   }
 
   async function extractPageData(tabId) {
@@ -665,23 +704,6 @@
     }
   }
 
-  async function updateActiveTabDisplay() {
-    const tab = await getActiveTab();
-    activeTab = tab;
-    if (tab && tab.url) {
-      els.pageTitle.textContent = tab.title || hostLabel(tab.url) || "Current page";
-      els.pageUrl.textContent = tab.url;
-      els.btnScanPage.disabled = !isScannableUrl(tab.url);
-      els.btnCapture.disabled = !isScannableUrl(tab.url);
-    } else {
-      els.pageTitle.textContent = "No active page";
-      els.pageUrl.textContent = "Open a webpage to scan it with VIGIL.";
-      els.btnScanPage.disabled = true;
-      els.btnCapture.disabled = true;
-    }
-    refreshSelectionButton();
-  }
-
   // Re-check the active tab when the panel becomes visible again.
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {
@@ -692,6 +714,12 @@
 
   boot().catch((error) => console.error("VIGIL panel boot failed", error));
 
-  // Exposed for automated checks only.
-  self.__vigilPanel = { runScan, scanPage, scanSelection, scanVision, showResult, showError };
+  // The service worker can still be starting when the panel first opens
+  // (cold start after install/reload); if the first tab lookup failed, retry
+  // once shortly after so the user doesn't see a false "No active page".
+  setTimeout(() => {
+    if (document.visibilityState === "visible" && !workerReachable()) {
+      updateActiveTabDisplay();
+    }
+  }, 1500);
 })();

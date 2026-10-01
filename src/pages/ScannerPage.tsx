@@ -12,6 +12,7 @@ import {
   EvidenceCard,
   RecommendationCard,
   Alert,
+  Button,
 } from '../components';
 import { AnalysisMode, AnalysisResult, LoadingStep, AppError } from '../types';
 import { apiService } from '../services/api';
@@ -203,7 +204,7 @@ export const ScannerPage = () => {
               transition={{ duration: 0.4, ease: 'easeOut' }}
             >
               <MessageScanner
-                onAnalyze={(content, type) => handleAnalyze(content, 'message')}
+                onAnalyze={(content, _type) => handleAnalyze(content, 'message')}
                 isLoading={isLoading}
               />
             </motion.div>
@@ -233,7 +234,7 @@ export const ScannerPage = () => {
               transition={{ duration: 0.4, ease: 'easeOut' }}
             >
               <ScreenshotScanner
-                onAnalyze={(file) => handleAnalyze(file, 'screenshot')}
+                onAnalyze={(file) => handleAnalyze(file.file, 'screenshot')}
                 isLoading={isLoading}
               />
             </motion.div>

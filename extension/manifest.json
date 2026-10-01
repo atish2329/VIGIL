@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "VIGIL Security",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "AI-powered protection against phishing, scams and suspicious websites.",
   "minimum_chrome_version": "116",
   "icons": {
@@ -24,7 +24,7 @@
   "background": {
     "service_worker": "background/service-worker.js"
   },
-  "permissions": ["storage", "activeTab", "scripting", "contextMenus", "sidePanel"],
+  "permissions": ["storage", "tabs", "activeTab", "scripting", "contextMenus", "sidePanel"],
   "content_security_policy": {
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
   },

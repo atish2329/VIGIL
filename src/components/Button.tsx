@@ -1,14 +1,14 @@
-import { forwardRef, ButtonHTMLAttributes } from 'react';
-import { motion } from 'framer-motion';
+import { forwardRef } from 'react';
+import { motion, HTMLMotionProps } from 'framer-motion';
 import { ButtonVariant, ButtonSize } from '../types';
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+type ButtonProps = HTMLMotionProps<'button'> & {
   variant?: ButtonVariant;
   size?: ButtonSize;
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
-}
+};
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (

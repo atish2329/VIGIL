@@ -1,14 +1,15 @@
-import { forwardRef, HTMLAttributes } from 'react';
-import { motion } from 'framer-motion';
+import { forwardRef } from 'react';
+import { motion, HTMLMotionProps } from 'framer-motion';
 import { RiskLevel, Severity, RiskLevelColors, SeverityColors } from '../types';
 
-interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
+type BadgeProps = HTMLMotionProps<'span'> & {
   variant?: 'risk' | 'severity' | 'status' | 'custom';
   riskLevel?: RiskLevel;
   severity?: Severity;
   color?: string;
   dot?: boolean;
-}
+  children?: React.ReactNode;
+};
 
 export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
   (

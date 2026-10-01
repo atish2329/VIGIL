@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AnalysisMode } from '../types';
 import { Card } from './Card';

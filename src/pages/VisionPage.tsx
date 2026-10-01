@@ -15,7 +15,6 @@ import {
 import { UploadedFile, AnalysisResult, LoadingStep, AppError, DetectedRegion } from '../types';
 import { apiService } from '../services/api';
 import { mockApiService } from '../services/mockApi';
-import { DefaultLoadingSteps } from '../types';
 
 // Vision-specific loading steps
 const VisionLoadingSteps: LoadingStep[] = [

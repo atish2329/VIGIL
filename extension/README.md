@@ -34,6 +34,23 @@ stores no secrets and never reads form values.
 5. Select the `extension/` folder — the one containing `manifest.json`
 6. Pin **VIGIL Security** to the toolbar and click it to open the side panel
 
+## Troubleshooting
+
+**"Scan This Page" is greyed out / "No active page" while on a normal website**
+
+- **Panel says "VIGIL can't reach its background worker"** — the panel lost its
+  bridge to the extension's service worker, which happens when the extension
+  was reloaded while the panel stayed open. Close and reopen the side panel; if
+  that doesn't help, reload the extension in `chrome://extensions` (↻) and
+  reopen the panel.
+- **Old version loaded (below 1.0.1)** — version 1.0.1 added the `tabs`
+  permission. Without it Chrome does not give the panel the current tab's URL,
+  so every website shows "No active page" and the scan buttons stay disabled.
+  Re-load the fresh build (step 5 above) and confirm **1.0.1** on the VIGIL
+  card in `chrome://extensions`.
+- **chrome://, edge://, about:, file:// and other browser pages** — these are
+  never scannable; open a regular http(s) page.
+
 ## Connect to the VIGIL backend
 
 The analyzer must be running somewhere reachable:
