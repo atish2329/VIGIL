@@ -15,7 +15,7 @@ import { storageService } from '../services/storage';
 export const DashboardPage = () => {
   const navigate = useNavigate();
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [useMockBackend, setUseMockBackend] = useState(false);
 
@@ -139,25 +139,25 @@ export const DashboardPage = () => {
         >
           {metrics ? (
             <>
-              <StatCard
+              <DashboardCard.Stat
                 title="Total Scans"
                 value={metrics.totalScans}
                 icon="📊"
                 color="text-primary-accent"
               />
-              <StatCard
+              <DashboardCard.Stat
                 title="High Risk"
                 value={metrics.highRisk}
                 icon="🚨"
                 color="text-danger"
               />
-              <StatCard
+              <DashboardCard.Stat
                 title="Suspicious"
                 value={metrics.suspicious}
                 icon="⚠️"
                 color="text-warning"
               />
-              <StatCard
+              <DashboardCard.Stat
                 title="Low Risk"
                 value={metrics.lowRisk}
                 icon="✅"
@@ -166,10 +166,10 @@ export const DashboardPage = () => {
             </>
           ) : (
             <>
-              <StatCard title="Total Scans" value="0" icon="📊" />
-              <StatCard title="High Risk" value="0" icon="🚨" />
-              <StatCard title="Suspicious" value="0" icon="⚠️" />
-              <StatCard title="Low Risk" value="0" icon="✅" />
+              <DashboardCard.Stat title="Total Scans" value="0" icon="📊" />
+              <DashboardCard.Stat title="High Risk" value="0" icon="🚨" />
+              <DashboardCard.Stat title="Suspicious" value="0" icon="⚠️" />
+              <DashboardCard.Stat title="Low Risk" value="0" icon="✅" />
             </>
           )}
         </motion.div>
@@ -200,8 +200,8 @@ export const DashboardPage = () => {
         >
           {metrics && (
             <>
-              <RiskDistribution distribution={metrics.riskDistribution} />
-              <ScanTypeDistribution distribution={metrics.scanTypeDistribution} />
+              <DashboardCard.RiskDistribution distribution={metrics.riskDistribution} />
+              <DashboardCard.ScanTypeDistribution distribution={metrics.scanTypeDistribution} />
             </>
           )}
         </motion.div>
@@ -213,7 +213,7 @@ export const DashboardPage = () => {
           transition={{ delay: 0.3, duration: 0.6, ease: 'easeOut' }}
         >
           {metrics && (
-            <RecentScans
+            <DashboardCard.RecentScans
               scans={metrics.recentScans}
               onView={handleViewScan}
             />

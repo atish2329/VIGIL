@@ -28,6 +28,7 @@ export const UploadArea = ({
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [selectedFileName, setSelectedFileName] = useState<string>('');
 
   const handleDragEnter = useCallback((e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -84,6 +85,7 @@ export const UploadArea = ({
       reader.onload = () => {
         const previewUrl = reader.result as string;
         setPreview(previewUrl);
+        setSelectedFileName(file.name);
         
         onFileSelect({
           file,
@@ -95,6 +97,7 @@ export const UploadArea = ({
       };
       reader.readAsDataURL(file);
     } else {
+      setSelectedFileName(file.name);
       onFileSelect({
         file,
         preview: '',
@@ -113,6 +116,7 @@ export const UploadArea = ({
 
   const handleRemove = () => {
     setPreview(null);
+    setSelectedFileName('');
     setError(null);
     onRemove();
   };
@@ -166,7 +170,7 @@ export const UploadArea = ({
                   ×
                 </button>
               </motion.div>
-              <p className="text-sm text-secondary-text">{preview.fileName}</p>
+              <p className="text-sm text-secondary-text">{selectedFileName}</p>
             </div>
           ) : (
             <>

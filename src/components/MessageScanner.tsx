@@ -10,23 +10,25 @@ interface MessageScannerProps {
   onAnalyze: (content: string, messageType?: string) => void;
   isLoading?: boolean;
   placeholder?: string;
+  initialError?: string;
 }
 
 export const MessageScanner = ({
   onAnalyze,
   isLoading = false,
   placeholder = 'Paste a suspicious message here...',
+  initialError = '',
 }: MessageScannerProps) => {
   const [content, setContent] = useState('');
   const [messageType, setMessageType] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string>(initialError);
 
   const handleSubmit = useCallback(() => {
     if (!content.trim()) {
       setError('Please paste a message to analyze');
       return;
     }
-    setError(null);
+    setError('');
     onAnalyze(content, messageType || undefined);
   }, [content, messageType, onAnalyze]);
 

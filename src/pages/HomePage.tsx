@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components';
@@ -85,14 +85,12 @@ const features = [
 
 export const HomePage = () => {
   const navigate = useNavigate();
-  const [selectedMode, setSelectedMode] = useState<AnalysisMode | null>(null);
 
   const handleGetStarted = useCallback(() => {
     navigate('/scanner');
   }, [navigate]);
 
   const handleQuickScan = useCallback((mode: AnalysisMode) => {
-    setSelectedMode(mode);
     setTimeout(() => {
       navigate(`/scanner?mode=${mode}`);
     }, 100);

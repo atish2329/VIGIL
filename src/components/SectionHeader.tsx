@@ -1,14 +1,14 @@
-import { forwardRef, HTMLAttributes } from 'react';
-import { motion } from 'framer-motion';
+import { forwardRef } from 'react';
+import { motion, HTMLMotionProps } from 'framer-motion';
 
-interface SectionHeaderProps extends HTMLAttributes<HTMLDivElement> {
+type SectionHeaderProps = HTMLMotionProps<'div'> & {
   title: string;
   subtitle?: string;
   eyebrow?: string;
   description?: string;
   action?: React.ReactNode;
   align?: 'left' | 'center' | 'right';
-}
+};
 
 export const SectionHeader = forwardRef<HTMLDivElement, SectionHeaderProps>(
   (

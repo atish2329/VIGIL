@@ -170,20 +170,6 @@ const generateMockRecommendation = (riskLevel: RiskLevel): string => {
   }
 };
 
-// Generate mock risk score
-const generateMockRiskScore = (riskLevel: RiskLevel): number => {
-  switch (riskLevel) {
-    case 'HIGH':
-      return Math.floor(Math.random() * 41) + 60; // 60-100
-    case 'SUSPICIOUS':
-      return Math.floor(Math.random() * 30) + 30; // 30-59
-    case 'LOW':
-      return Math.floor(Math.random() * 30); // 0-29
-    default:
-      return 0;
-  }
-};
-
 // Generate mock analysis result
 const generateMockAnalysis = (
   scanType: 'message' | 'url' | 'screenshot',
@@ -270,7 +256,7 @@ export const mockApiService = {
   },
 
   analyzeScreenshot: async (
-    request: AnalyzeScreenshotRequest
+    _request: AnalyzeScreenshotRequest
   ): Promise<APIResponse<AnalysisResult>> => {
     await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -284,7 +270,7 @@ export const mockApiService = {
     };
   },
 
-  analyzePage: async (html: string): Promise<APIResponse<AnalysisResult>> => {
+  analyzePage: async (_html: string): Promise<APIResponse<AnalysisResult>> => {
     await new Promise(resolve => setTimeout(resolve, 1000));
     return {
       success: true,
@@ -292,7 +278,7 @@ export const mockApiService = {
     };
   },
 
-  analyzeQR: async (qrData: string): Promise<APIResponse<AnalysisResult>> => {
+  analyzeQR: async (_qrData: string): Promise<APIResponse<AnalysisResult>> => {
     await new Promise(resolve => setTimeout(resolve, 1000));
     return {
       success: true,
@@ -342,7 +328,7 @@ export const mockApiService = {
     };
   },
 
-  getAnalysis: async (analysisId: string): Promise<APIResponse<AnalysisResult>> => {
+  getAnalysis: async (_analysisId: string): Promise<APIResponse<AnalysisResult>> => {
     await new Promise(resolve => setTimeout(resolve, 500));
     return {
       success: true,
@@ -350,7 +336,7 @@ export const mockApiService = {
     };
   },
 
-  deleteHistoryItem: async (id: string): Promise<APIResponse<{ success: boolean }>> => {
+  deleteHistoryItem: async (_id: string): Promise<APIResponse<{ success: boolean }>> => {
     await new Promise(resolve => setTimeout(resolve, 300));
     return {
       success: true,

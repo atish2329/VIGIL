@@ -1,6 +1,5 @@
 import { Fragment, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from './Button';
 
 interface ModalProps {
   isOpen: boolean;

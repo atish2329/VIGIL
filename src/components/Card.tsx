@@ -1,12 +1,12 @@
 import { forwardRef, HTMLAttributes } from 'react';
-import { motion } from 'framer-motion';
+import { motion, HTMLMotionProps } from 'framer-motion';
 
-interface CardProps extends HTMLAttributes<HTMLDivElement> {
+type CardProps = HTMLMotionProps<'div'> & {
   variant?: 'default' | 'elevated' | 'bordered' | 'subtle';
   padding?: 'none' | 'sm' | 'md' | 'lg';
   hoverEffect?: boolean;
   clickable?: boolean;
-}
+};
 
 export const Card = forwardRef<HTMLDivElement, CardProps>(
   (

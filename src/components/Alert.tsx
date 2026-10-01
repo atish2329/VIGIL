@@ -1,8 +1,8 @@
-import { forwardRef, HTMLAttributes } from 'react';
-import { motion } from 'framer-motion';
+import { forwardRef } from 'react';
+import { motion, HTMLMotionProps } from 'framer-motion';
 import { Button } from './Button';
 
-interface AlertProps extends HTMLAttributes<HTMLDivElement> {
+type AlertProps = HTMLMotionProps<'div'> & {
   type?: 'info' | 'success' | 'warning' | 'error';
   title?: string;
   message: string;
@@ -12,7 +12,7 @@ interface AlertProps extends HTMLAttributes<HTMLDivElement> {
     label: string;
     onClick: () => void;
   };
-}
+};
 
 export const Alert = forwardRef<HTMLDivElement, AlertProps>(
   (

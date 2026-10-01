@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Card } from './Card';
-import { RiskLevel, DashboardMetrics } from '../types';
+import { RiskLevel } from '../types';
 
 interface StatCardProps {
   title: string;
