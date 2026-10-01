@@ -1,9 +1,32 @@
 {
   "manifest_version": 3,
-  "name": "VIGIL Page Review",
-  "version": "0.1.0",
-  "description": "Review the current page with VIGIL and replace pages that receive a DENY decision.",
-  "permissions": ["activeTab", "scripting"],
-  "host_permissions": ["http://127.0.0.1:8000/*"],
-  "action": { "default_popup": "popup.html" }
+  "name": "VIGIL Security",
+  "version": "1.1.0",
+  "description": "AI-powered protection against phishing, scams and suspicious websites.",
+  "minimum_chrome_version": "116",
+  "icons": {
+    "16": "assets/icons/icon16.png",
+    "32": "assets/icons/icon32.png",
+    "48": "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png"
+  },
+  "action": {
+    "default_title": "Open VIGIL",
+    "default_icon": {
+      "16": "assets/icons/icon16.png",
+      "32": "assets/icons/icon32.png",
+      "48": "assets/icons/icon48.png"
+    }
+  },
+  "side_panel": {
+    "default_path": "sidepanel/sidepanel.html"
+  },
+  "background": {
+    "service_worker": "background/service-worker.js"
+  },
+  "permissions": ["storage", "tabs", "activeTab", "scripting", "contextMenus", "sidePanel"],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  },
+  "host_permissions": ["http://127.0.0.1:8000/*"]
 }

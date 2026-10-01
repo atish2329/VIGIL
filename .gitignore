@@ -1,63 +1,43 @@
-# Python
-__pycache__/
-*.py[cod]
-.venv/
-venv/
-env/
-
-# Secrets
-.env
-.env.*
-!.env.example
-
-# Local models
-models/
-*.gguf
-*.bin
-*.safetensors
-*.pt
-*.pth
-*.onnx
-
-# Node
+# Dependencies
 node_modules/
 
 # Build output
 dist/
 build/
-.next/
-out/
 
-# IDE / agent files
-.vscode/
+# Generated extension zip (npm run build:extension)
+vigil-extension.zip
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE
 .idea/
-.codex/
+.vscode/
+*.swp
+*.swo
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Logs / temporary
+# Logs
 *.log
-tmp/
-temp/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Cache
 .cache/
+__pycache__/
+*.pyc
 
-# Python test/cache
-.pytest_cache/
-.coverage
-htmlcov/
+# Test coverage
+coverage/
 
-# Project-internal files
-conversation.md
-AGENTS.md
-graphify-out/
-recordings/
-.stitch-project.json
-
-# Generated design images
-design/stitch/*.png
-
-# OCR engine artifacts (language data caches at repo root)
-*.traineddata
-eng.traineddata
+# TypeScript
+*.tsbuildinfo

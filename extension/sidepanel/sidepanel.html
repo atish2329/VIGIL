@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VIGIL Security</title>
+  <link rel="stylesheet" href="sidepanel.css" />
+</head>
+<body>
+  <header class="panel-header">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">V</span>
+      <div class="brand-text">
+        <span class="brand-name">VIGIL</span>
+        <span class="brand-sub">AI Security Companion</span>
+      </div>
+    </div>
+    <div class="conn" id="conn" role="status" aria-live="polite">
+      <span class="conn-dot" id="conn-dot" aria-hidden="true"></span>
+      <span id="conn-text">Checking…</span>
+    </div>
+  </header>
+
+  <main class="panel-main" id="main">
+    <!-- ======================= Home / scan controls ======================= -->
+    <section class="view" id="view-home" aria-label="Scan controls">
+      <div class="card page-card">
+        <p class="eyebrow">CURRENT PAGE</p>
+        <h2 class="page-title" id="page-title"><span id="risk-dot" class="risk-dot dot-gray" aria-hidden="true"></span><span id="page-title-text">Ready to scan</span></h2>
+        <p class="page-url" id="page-url">Open a webpage, then scan it before trusting its content.</p>
+        <button id="btn-scan-page" class="btn-primary" type="button">Scan This Page</button>
+      </div>
+
+      <div class="card actions-card">
+        <button id="btn-scan-selection" class="btn-secondary" type="button" disabled>
+          Scan Selected Text
+        </button>
+        <button id="btn-capture" class="btn-secondary" type="button">Capture &amp; Scan</button>
+        <form id="url-form" class="url-row" autocomplete="off">
+          <input id="url-input" class="url-input" type="url" spellcheck="false"
+                 placeholder="https://example.com" aria-label="URL to scan" />
+          <button id="btn-scan-url" class="btn-secondary" type="submit">Scan URL</button>
+        </form>
+        <p class="hint">Select text on the page and right-click → “Scan with VIGIL”, or use the buttons above.</p>
+      </div>
+
+      <section class="history-block" aria-label="Recent scans">
+        <div class="history-head">
+          <h3>Recent scans</h3>
+          <button id="btn-history-clear" class="btn-ghost" type="button">Clear</button>
+        </div>
+        <ul id="history-list" class="history-list"></ul>
+        <p id="history-empty" class="hint">No scans yet.</p>
+        <p class="hint privacy-note">
+          VIGIL analyzes only the content required for the scan you request.
+          History stores metadata only — never page content.
+        </p>
+      </section>
+    </section>
+
+    <!-- ======================= Loading state ======================= -->
+    <section class="view hidden" id="view-loading" aria-label="Analysis progress" aria-busy="true">
+      <p class="eyebrow">VIGIL ANALYZING</p>
+      <ol class="steps" id="steps">
+        <li data-step="capture">Capturing page</li>
+        <li data-step="extract">Extracting relevant content</li>
+        <li data-step="urls">Checking URLs</li>
+        <li data-step="correlate">Correlating security signals</li>
+        <li data-step="score">Calculating risk</li>
+        <li data-step="report">Building report</li>
+      </ol>
+      <canvas id="vision-preview" width="320" height="180" class="vision-preview hidden"
+              aria-label="Screenshot preview"></canvas>
+      <button id="btn-cancel" class="btn-ghost" type="button">Cancel</button>
+    </section>
+
+    <!-- ======================= Result view ======================= -->
+    <section class="view hidden" id="view-result" aria-label="Analysis result" aria-live="polite">
+      <div class="card result-card" id="result-card">
+        <p class="eyebrow" id="result-label">SECURITY ANALYSIS</p>
+        <div class="verdict-row">
+          <span class="verdict-badge" id="verdict-badge">—</span>
+        </div>
+        <div class="score-row">
+          <div class="score-ring" id="score-ring" role="img" aria-label="Risk score">
+            <span class="score-value" id="score-value">—</span>
+          </div>
+          <div class="score-meta">
+            <span class="score-num" id="score-num">— / 100</span>
+            <span class="score-word" id="score-word"></span>
+          </div>
+        </div>
+        <p class="confidence" id="confidence-line"></p>
+
+        <div class="evidence">
+          <h3>DETECTED INDICATORS</h3>
+          <ul class="evidence-list" id="evidence-list"></ul>
+        </div>
+
+        <div class="why">
+          <h3>WHY VIGIL FLAGGED THIS</h3>
+          <p id="why-text"></p>
+          <ul class="actions" id="recommended-actions"></ul>
+        </div>
+
+        <div class="model-note" id="model-note"></div>
+
+        <div class="result-actions">
+          <button id="btn-back" class="btn-secondary" type="button">Back</button>
+          <button id="btn-again" class="btn-primary" type="button">Scan Again</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= Error state ======================= -->
+    <section class="view hidden" id="view-error" aria-label="Error" role="alert">
+      <div class="card error-card">
+        <p class="eyebrow">VIGIL ERROR</p>
+        <h2 id="error-title">Something went wrong</h2>
+        <p id="error-message"></p>
+        <button id="btn-retry" class="btn-primary" type="button">Try Again</button>
+        <button id="btn-error-back" class="btn-ghost" type="button">Back</button>
+      </div>
+    </section>
+
+    <!-- ======================= Settings ======================= -->
+    <section class="view hidden" id="view-settings" aria-label="Settings">
+      <div class="card">
+        <p class="eyebrow">SETTINGS</p>
+        <label class="setting-row">
+          <span class="setting-copy">
+            <span class="setting-name">Enable page scanning</span>
+            <span class="setting-desc">Allow “Scan This Page” to extract page content.</span>
+          </span>
+          <input type="checkbox" id="opt-page-scan" />
+        </label>
+        <label class="setting-row">
+          <span class="setting-copy">
+            <span class="setting-name">Keep scan history</span>
+            <span class="setting-desc">Recent-scan metadata, stored on this device.</span>
+          </span>
+          <input type="checkbox" id="opt-keep-history" />
+        </label>
+        <label class="setting-row setting-col">
+          <span class="setting-name">VIGIL server address</span>
+          <input type="url" id="opt-api-base" spellcheck="false" placeholder="http://127.0.0.1:8000" />
+        </label>
+        <div class="status-box">
+          <p class="status-line"><span>Backend</span><strong id="status-backend">—</strong></p>
+          <p class="status-line"><span>Local model</span><strong id="status-model">—</strong></p>
+        </div>
+        <div class="settings-actions">
+          <button id="btn-settings-save" class="btn-primary" type="button">Save</button>
+          <button id="btn-settings-test" class="btn-secondary" type="button">Test Connection</button>
+          <button id="btn-settings-back" class="btn-ghost" type="button">Back</button>
+        </div>
+        <p class="hint">
+          VIGIL analyzes only the content required for the scan you request. Nothing is sent
+          until you start a scan, and no API secrets are stored in this extension.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="panel-footer">
+    <button id="btn-settings" class="btn-ghost" type="button" aria-haspopup="dialog">⚙ Settings</button>
+    <span class="footer-note">Local-first · Nothing sent until you scan</span>
+  </footer>
+
+  <script src="../config/config.js"></script>
+  <script src="../services/api.js"></script>
+  <script src="../utils/riskFormatter.js"></script>
+  <script src="vision-ocr.js"></script>
+  <script src="sidepanel.js"></script>
+</body>
+</html>
