@@ -7,7 +7,8 @@ Step-by-step instructions to build, run, and verify every component of VIGIL loc
 | Component | Location | What it is |
 |---|---|---|
 | Analyzer server | `app.py` | Local Python HTTP server — the rules engine + optional Ollama review |
-| Chromium extension | `extension/` | Manifest V3 side-panel extension (page / selection / screenshot scanning) |
+| Chromium extension | `extension/` | **VIGIL Security** MV3 side panel (page / selection / URL / screenshot scanning, history, settings) |
+| Legacy popup extension | `vigil-extension/` | Team's parallel MV3 companion (side panel, agent-guard scripts) — see `vigil-extension/README.md` |
 | Web UI | `web/` | Browser frontend (deployed on Vercel) |
 | Serverless API | `api/` | Vercel Python functions backing the web UI (`/api/*`) |
 | Offline verification | `scripts/run_offline_fixtures.py` | Deterministic fixture tests, no network or model required |
@@ -66,9 +67,19 @@ VIGIL_PORT=9000 python3 app.py
 
 ## 2. Load the Chromium Extension
 
-The companion extension (**VIGIL Security**, Manifest V3) adds a full side panel to the browser: current-page scanning, selected-text scanning, screenshot analysis via VIGIL Vision (local OCR — the image never leaves the device), scan history, and settings. It is a pure client: every verdict comes from the analyzer, no detection logic is duplicated, and no secrets are stored in the extension.
+Two MV3 extensions ship in this repo:
 
-### 2.1 Install and load
+- **`extension/`** — **VIGIL Security**, the full side panel: "Scan This Page",
+  "Scan Selected Text", right-click "Scan with VIGIL", **URL Scanner**,
+  **Capture & Scan** (VIGIL Vision — local OCR; the image never leaves the
+device), page-risk indicator, scan history, and settings. A pure client:
+  every verdict comes from the analyzer, no detection logic is duplicated, no
+  secrets are stored in the extension.
+- **`vigil-extension/`** — the team's parallel MV3 companion (side panel with
+  page/URL/message/screenshot scans and agent-guard scripts); see
+  `vigil-extension/README.md`.
+
+### 2.1 Install and load VIGIL Security (`extension/`)
 
 1. Start the analyzer first (step 1) — the extension talks to `http://127.0.0.1:8000`.
 2. Open `chrome://extensions` in your Chromium browser.
@@ -104,6 +115,10 @@ npm run build:extension
 ```
 
 The build script fails if `manifest.json` is not at the zip root — nesting the contents under `extension/` makes Chrome reject the load with "Manifest file is missing or unreadable."
+### 2.2 Load the parallel companion (`vigil-extension/`)
+
+1. `chrome://extensions` → **Load unpacked** → select `vigil-extension/`.
+2. Full instructions: [`vigil-extension/README.md`](vigil-extension/README.md).
 
 ---
 
