@@ -97,8 +97,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     case "vigil:getActiveTab": {
       (async () => {
         try {
-          const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+          // currentWindow (not lastFocusedWindow): when a side panel is docked
+          // to a window, focusing it must not make another window's tab win.
+          const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+          // Fallback: chrome may report a "complete" tab without a URL while a
+          // navigation is committing; don't drop a usable active tab for that.
+          if (tab && !tab.url && tab.pendingUrl) {
+            tab.url = tab.pendingUrl;
+          }
           sendResponse({ ok: true, tab: tab ? { id: tab.id, url: tab.url, title: tab.title } : null });
+          return;
         } catch (error) {
           sendResponse({ ok: false, error: String((error && error.message) || error) });
         }

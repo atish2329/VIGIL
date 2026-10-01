@@ -48,8 +48,11 @@ stores no secrets and never reads form values.
   so every website shows "No active page" and the scan buttons stay disabled.
   Re-load the fresh build (step 5 above) and confirm **1.0.1** on the VIGIL
   card in `chrome://extensions`.
-- **chrome://, edge://, about:, file:// and other browser pages** — these are
-  never scannable; open a regular http(s) page.
+- **chrome://, edge://, about:, file:// and other browser pages** — Chrome
+  does not allow content scripts there, so VIGIL cannot scan them; the panel
+  says so instead of leaving a dead button. Open a normal http(s) page.
+- **Panel shows the wrong page** — fixed in 1.0.2: the panel now follows tab
+  switches and navigations live. If an old copy is loaded, re-load 1.0.2.
 
 ## Connect to the VIGIL backend
 
