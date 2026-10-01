@@ -72,6 +72,7 @@
   let lastRun = null; // for Try Again
   let scanCount = 0;
   let generation = 0; // invalidates stale async completions
+  let clearArmTimer = null; // two-step history clear
 
   // ------------------------------------------------------------------
   // View switching
@@ -335,6 +336,19 @@
   }
 
   async function getActiveTab() {
+    // The panel is an extension page and "tabs" is granted, so it can query
+    // tabs directly — scoped to THIS window (the one the panel is docked to)
+    // rather than the last-focused one. Direct query also re-runs cheaply on
+    // every tab switch, so the panel live-follows the user.
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      workerLastResponse = true;
+      if (!tab) return null;
+      return { id: tab.id, url: tab.url, title: tab.title };
+    } catch {
+      // Extension context invalidated (the extension was reloaded while this
+      // panel stayed open) — fall back to the service-worker bridge.
+    }
     const response = await sendMessage({ type: "vigil:getActiveTab" });
     workerLastResponse = Boolean(response);
     if (!response || !response.ok || !response.tab) return null;
@@ -345,10 +359,14 @@
     const tab = await getActiveTab();
     activeTab = tab;
     if (tab && tab.url) {
+      const scannable = isScannableUrl(tab.url);
       els.pageTitle.textContent = tab.title || hostLabel(tab.url) || "Current page";
-      els.pageUrl.textContent = tab.url;
-      els.btnScanPage.disabled = !isScannableUrl(tab.url);
+      els.pageUrl.textContent = scannable
+        ? tab.url
+        : "VIGIL cannot scan this Chrome page. Open a normal webpage and try again.";
+      els.btnScanPage.disabled = !scannable;
       els.btnCapture.disabled = !isScannableUrl(tab.url);
+      refreshSelectionButton();
       return;
     }
     if (!workerReachable()) {
@@ -489,7 +507,7 @@
       }
       text = (text || "").trim();
       if (!text) {
-        throw new Error("No text is selected. Highlight some text on the page first.");
+        throw new Error("No text selected. Select suspicious text on the page and try again.");
       }
       if (thisGeneration !== generation) return;
       setStep("capture", "done", "selection");
@@ -634,8 +652,22 @@
     });
     els.btnErrorBack.addEventListener("click", () => showView("home"));
     els.btnHistoryClear.addEventListener("click", async () => {
-      await sendMessage({ type: "vigil:history:clear" });
-      renderHistory([]);
+      // Two-step confirm: the first click arms the button, the second (within
+      // a few seconds) actually clears. No dialog dependency, no accidental
+      // history wipes.
+      if (clearArmTimer) {
+        clearTimeout(clearArmTimer);
+        clearArmTimer = null;
+        els.btnHistoryClear.textContent = "Clear";
+        await sendMessage({ type: "vigil:history:clear" });
+        renderHistory([]);
+        return;
+      }
+      els.btnHistoryClear.textContent = "Sure?";
+      clearArmTimer = setTimeout(() => {
+        clearArmTimer = null;
+        els.btnHistoryClear.textContent = "Clear";
+      }, 3500);
     });
     els.btnSettings.addEventListener("click", openSettings);
     els.btnSettingsSave.addEventListener("click", saveSettings);
@@ -711,6 +743,26 @@
       refreshConnection();
     }
   });
+
+  // Live-follow tab switches and navigations while the panel is open. Both
+  // events are received by the panel page directly ("tabs" permission); the
+  // refresh is debounced so bursts (e.g. SPA navigations) coalesce.
+  let tabRefreshTimer = null;
+  function scheduleTabRefresh() {
+    if (tabRefreshTimer) return;
+    tabRefreshTimer = setTimeout(() => {
+      tabRefreshTimer = null;
+      if (document.visibilityState === "visible") updateActiveTabDisplay();
+    }, 120);
+  }
+  if (chrome.tabs && chrome.tabs.onActivated && chrome.tabs.onUpdated) {
+    chrome.tabs.onActivated.addListener(scheduleTabRefresh);
+    chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+      if (tab && tab.active && (changeInfo.url || changeInfo.title || changeInfo.status === "complete")) {
+        scheduleTabRefresh();
+      }
+    });
+  }
 
   boot().catch((error) => console.error("VIGIL panel boot failed", error));
 

@@ -149,6 +149,26 @@ def static_checks():
         "panel distinguishes bridge-down from no active tab",
         "workerReachable" in panel_js_src and "background worker" in panel_js_src,
     )
+    check(
+        "panel live-follows tab switches (onActivated/onUpdated)",
+        "chrome.tabs.onActivated" in panel_js_src and "chrome.tabs.onUpdated" in panel_js_src,
+    )
+    check(
+        "panel scopes tab query to its own window",
+        "currentWindow: true" in panel_js_src or "currentWindow:true" in panel_js_src,
+    )
+    check(
+        "restricted pages explain why scanning is blocked",
+        "cannot scan this Chrome page" in panel_js_src,
+    )
+    check(
+        "empty selection shows actionable message",
+        "No text selected. Select suspicious text on the page and try again." in panel_js_src,
+    )
+    check(
+        "history clear confirms before wiping",
+        "Sure?" in panel_js_src,
+    )
     check("side panel opens on action click", "openPanelOnActionClick: true" in worker)
     check("capture uses captureVisibleTab (activeTab)", "captureVisibleTab" in worker)
 
