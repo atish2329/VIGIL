@@ -80,7 +80,18 @@ def static_checks():
         manifest.get("background", {}).get("service_worker") == "background/service-worker.js",
     )
     perms = set(manifest.get("permissions", []))
-    check("permissions minimal", perms == {"storage", "activeTab", "scripting", "contextMenus", "sidePanel"}, str(sorted(perms)))
+    check(
+        "permissions minimal",
+        perms == {"storage", "tabs", "activeTab", "scripting", "contextMenus", "sidePanel"},
+        str(sorted(perms)),
+    )
+    # Regression: without the "tabs" permission Chrome strips url/title from
+    # chrome.tabs.query() results on regular websites, so the side panel sees
+    # "No active page" and Scan This Page stays disabled.
+    check(
+        "tabs permission present (url/title visibility for getActiveTab)",
+        "tabs" in perms,
+    )
     check(
         "no broad host permissions",
         set(manifest.get("host_permissions", [])) <= {"http://127.0.0.1:8000/*", "http://localhost:8000/*"},
@@ -133,6 +144,11 @@ def static_checks():
 
     worker = open(os.path.join(HERE, "background/service-worker.js")).read()
     check("context menu 'Scan with VIGIL' registered", '"Scan with VIGIL"' in worker and "vigil-scan-selection" in worker)
+    panel_js_src = open(os.path.join(HERE, "sidepanel/sidepanel.js")).read()
+    check(
+        "panel distinguishes bridge-down from no active tab",
+        "workerReachable" in panel_js_src and "background worker" in panel_js_src,
+    )
     check("side panel opens on action click", "openPanelOnActionClick: true" in worker)
     check("capture uses captureVisibleTab (activeTab)", "captureVisibleTab" in worker)
 

@@ -87,7 +87,7 @@ The server address defaults to `http://127.0.0.1:8000` (defined in `extension/co
 - **Capture & Scan** — captures the visible tab and runs the VIGIL Vision pipeline locally (Tesseract.js OCR + jsQR, bundled in `extension/vendor/`), then sends only extracted text/coordinates to the analyzer. First Vision scan warms the local OCR engine (a few seconds).
 - **Settings** — enable/disable page scanning, clear or disable history (metadata only: time, label, verdict, score), backend + local-model status.
 
-> Permissions: `storage`, `activeTab`, `scripting`, `contextMenus`, `sidePanel` — the minimum set. Nothing is sent to the backend until you trigger a scan, and page content is never stored. If you change the analyzer port, also update `host_permissions` in `extension/manifest.json`.
+> Permissions: `storage`, `tabs`, `activeTab`, `scripting`, `contextMenus`, `sidePanel`. `tabs` is required so the side panel can read the current tab's URL/title (without it, "Scan This Page" stays greyed out with "No active page" on every website). Nothing is sent to the backend until you trigger a scan, and page content is never stored. If you change the analyzer port, also update `host_permissions` in `extension/manifest.json`.
 
 ### 2.4 Verifying the extension build
 
