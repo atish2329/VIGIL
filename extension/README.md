@@ -77,6 +77,15 @@ If the backend is not `http://127.0.0.1:8000`, also add its URL to
 - **Right-click selection → "Scan with VIGIL"** — analyze any highlighted text
 - **Capture & Scan** — screenshot the visible tab; OCR (Tesseract.js WASM) and
   QR decoding (jsQR) run locally; only extracted text/coordinates are sent
+- **URL Scanner** — paste any link; the backend's URL heuristics (punycode,
+  IP hosts, embedded credentials, unencrypted HTTP, brand/link mismatch)
+  analyze it without VIGIL ever visiting the URL
+- **Page-risk indicator** — the CURRENT PAGE dot reflects the verdict of the
+  last page scan for that domain (green / yellow / red; gray until scanned);
+  VIGIL never auto-scans pages while you browse
+- **Normalized results** — every scanner returns the same structure
+  (riskLevel, riskScore, confidence, threatType, summary, indicators,
+  evidence, recommendation, timestamp, domain)
 - **Scan history** — metadata only (time, label, verdict, score)
 - **Settings** — page-scan toggle, history toggle/clear, backend + model status
 
